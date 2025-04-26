@@ -2,6 +2,7 @@ package com.example.databasetools.dialog;
 
 import com.esotericsoftware.kryo.kryo5.minlog.Log;
 import com.example.databasetools.Model;
+import com.example.databasetools.ui.ConfigurationDialog;
 import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.database.psi.DbTable;
 import com.intellij.ide.highlighter.JavaClassFileType;
@@ -26,6 +27,10 @@ public class ModelAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
+
+        ConfigurationDialog dialog = new ConfigurationDialog();
+        dialog.show();
+
         final Project project = e.getProject();
         if (project == null) {
             return;
