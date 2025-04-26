@@ -10,10 +10,7 @@
   <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
        Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
        Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-  <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
-  ]]></description>
+  <description><![CDATA[<h1>Model Generator</h1>]]></description>
 
   <vendor email="minjune8506@gmail.com"/>
 
@@ -23,12 +20,14 @@
   <depends>com.intellij.database</depends>
 
   <actions>
-    <group id="com.example.databasetools.dialog.Model"
+    <group id="com.example.databasetools.dialog.ModelAction"
       text="Model Generator"
       popup="true"
       description="Generate Model">
-      <add-to-group group-id="DatabaseViewPopupMenu" anchor="after" relative-to-action="DatabaseView.RunExtensionScriptGroup"/>
-      <action id="model" class="com.example.databasetools.dialog.Model" text="Model" description="Generate model class"/>
+      <add-to-group group-id="DatabaseViewPopupMenu" anchor="after"
+        relative-to-action="DatabaseView.RunExtensionScriptGroup"/>
+      <action id="model" class="com.example.databasetools.dialog.ModelAction" text="Model"
+        description="Generate model class"/>
     </group>
   </actions>
 
@@ -37,4 +36,5 @@
   <extensions defaultExtensionNs="com.intellij">
 
   </extensions>
+
 </idea-plugin>
