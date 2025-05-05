@@ -7,29 +7,28 @@ import java.time.LocalTime;
 
 public class ConvertUtil {
 
-    public static String toUpperCamelCase(String snake) {
-        var camelCase = new StringBuilder();
-        var tokens = snake.split("_");
-        for (String token : tokens) {
-            if (token.isEmpty()) {
-                continue;
-            }
-            camelCase.append(Character.toUpperCase(token.charAt(0)))
-                .append(token.substring(1).toLowerCase());
-        }
-        return camelCase.toString();
+    private ConvertUtil() {
     }
 
-    public static String toLowerCamelCase(String snake) {
+    public static String toCamelCase(String snake, boolean upperCase) {
         var camelCase = new StringBuilder();
         var tokens = snake.split("_");
-        for (String token : tokens) {
+
+        for (int i = 0; i < tokens.length; i++) {
+            var token = tokens[i].toLowerCase();
             if (token.isEmpty()) {
                 continue;
             }
-            camelCase.append(Character.toLowerCase(token.charAt(0)))
-                .append(token.substring(1).toLowerCase());
+            char firstCharacter = Character.toUpperCase(token.charAt(0));
+
+            if (i == 0 && !upperCase) {
+                firstCharacter = Character.toLowerCase(firstCharacter);
+            }
+
+            camelCase.append(firstCharacter)
+                .append(token.substring(1));
         }
+
         return camelCase.toString();
     }
 
@@ -46,7 +45,7 @@ public class ConvertUtil {
             case "TIME" -> LocalTime.class;
             case "TIMESTAMP", "TIMESTAMPTZ" -> LocalDateTime.class;
             case "BOOLEAN" -> Boolean.class;
-            default -> Object.class;
+            default -> String.class;
         };
     }
 }

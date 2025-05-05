@@ -1,9 +1,8 @@
 package com.example.databasetools.dialog;
 
 import com.esotericsoftware.kryo.kryo5.minlog.Log;
-import com.example.databasetools.Model;
-import com.example.databasetools.ui.ConfigurationDialog;
-import com.intellij.codeInsight.actions.ReformatCodeProcessor;
+import com.example.databasetools.domain.ModelGenerator;
+import com.example.databasetools.ui.ModelGeneratorConfigurationDialog;
 import com.intellij.database.psi.DbTable;
 import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -11,11 +10,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileChooser.FileChooser;
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.file.PsiDirectoryFactory;
 import java.util.Arrays;
@@ -27,53 +22,57 @@ public class ModelAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
+        // using the event, implement an action
+        final var project = e.getProject(); // Project from the context of this event.
+        final var psiElements = e.getData(PlatformCoreDataKeys.PSI_ELEMENT_ARRAY);
 
-        ConfigurationDialog dialog = new ConfigurationDialog();
-        dialog.show();
-
-        final Project project = e.getProject();
-        if (project == null) {
+        if (project == null || psiElements == null) {
             return;
         }
         LOG.debug(String.format("project: %s", project.getName()));
+        LOG.debug(String.format("psi Elements : %s", Arrays.toString(psiElements)));
 
-        final var psiElements = e.getData(PlatformCoreDataKeys.PSI_ELEMENT_ARRAY);
-        if (psiElements == null || psiElements.length == 0) {
+        var modelConfigurationDialog = new ModelGeneratorConfigurationDialog(project);
+        boolean isClose = modelConfigurationDialog.showAndGet();
+        if (!isClose) {
             return;
         }
-        LOG.debug(String.format("PSI Elements : %s", Arrays.toString(psiElements)));
 
-        final var basePath = project.getBasePath();
-        if (basePath != null) {
-            LOG.debug(String.format("proejct base path : %s", basePath));
+        var configuration = modelConfigurationDialog.getModelConfiguration();
+        Log.debug(String.format("chosen directory: %s", configuration.path()));
+        if (configuration.path() == null) {
+            return;
+        }
+        var virtualDir = LocalFileSystem.getInstance().findFileByPath(configuration.path());
+        if (virtualDir == null) {
+            return;
+        }
 
-            // choose directory
-            var baseDir = LocalFileSystem.getInstance().findFileByPath(basePath);
-            var fileChooserDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-            var chosenDir = FileChooser.chooseFile(fileChooserDescriptor, project, baseDir);
-            if (chosenDir == null) {
-                return;
-            }
-            Log.debug(String.format("chosen dir : %s", chosenDir.getPath()));
-            for (PsiElement psiElement : psiElements) {
+        for (var element : psiElements) {
+            if (element instanceof DbTable table) {
+                Log.debug(String.format("table: %s", table.getName()));
 
-                if (psiElement instanceof DbTable table) {
-                    Log.debug(String.format("table: %s", table.getName()));
+                var modelGenerator = new ModelGenerator(configuration);
+                var model = modelGenerator.generate(table);
 
-                    var model = new Model(table);
-                    var modelFile = PsiFileFactory.getInstance(project)
-                        .createFileFromText(
-                            model.getClassName() + ".java",
-                            JavaClassFileType.INSTANCE,
-                            model.toString());
-                    var psiDirectory = PsiDirectoryFactory.getInstance(project)
-                        .createDirectory(chosenDir);
+                var javaFile = modelGenerator.generateModelJavaFile(model);
+                Log.debug(javaFile);
 
-                    if (psiDirectory.findFile(modelFile.getName()) == null) {
-                        Runnable runnable = () -> psiDirectory.add(modelFile);
-                        WriteCommandAction.runWriteCommandAction(project, runnable);
-                        new ReformatCodeProcessor(project, modelFile, null, false).run();
-                    }
+                var modelPsiFile = PsiFileFactory.getInstance(project)
+                    .createFileFromText(
+                        model.getClassName() + ".java",
+                        JavaClassFileType.INSTANCE,
+                        javaFile);
+
+                var psiDirectory = PsiDirectoryFactory.getInstance(project)
+                    .createDirectory(virtualDir);
+
+                if (psiDirectory.findFile(modelPsiFile.getName()) == null) {
+                    Runnable runnable = () -> {
+                        psiDirectory.add(modelPsiFile);
+                        Log.debug("model file created");
+                    };
+                    WriteCommandAction.runWriteCommandAction(project, runnable);
                 }
             }
         }

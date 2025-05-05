@@ -2,7 +2,9 @@ package com.example.databasetools.config;
 
 public record ModelConfiguration(
     boolean useLombokGetter,
-    boolean useLombokSetter
+    boolean useMappingTableComment,
+    boolean useNullable,
+    String path
 ) {
 
 }
