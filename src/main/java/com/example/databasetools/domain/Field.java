@@ -1,20 +1,36 @@
 package com.example.databasetools.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 public class Field {
 
     private final String accessModifier = "private";
     private final Class<?> type;
-    private final String name;
-    private final String comment;
-    private final boolean notNull;
+    private final String fieldName;
 
-    public Field(Class<?> type, String name, String comment, boolean notNull) {
+    private final List<String> annotations = new ArrayList<>();
+    private final List<String> comments = new ArrayList<>();
+
+    public Field(Class<?> type, String fieldName) {
         this.type = type;
-        this.name = name;
-        this.comment = comment;
-        this.notNull = notNull;
+        this.fieldName = fieldName;
+    }
+
+    public void addAnnotation(String annotation) {
+        if (StringUtils.isBlank(annotation)) {
+            return;
+        }
+        this.annotations.add(annotation);
+    }
+
+    public void addComment(String comment) {
+        if (StringUtils.isBlank(comment)) {
+            return;
+        }
+        this.comments.add(comment);
     }
 }

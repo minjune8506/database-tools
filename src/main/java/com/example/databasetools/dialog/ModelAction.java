@@ -1,7 +1,8 @@
 package com.example.databasetools.dialog;
 
 import com.esotericsoftware.kryo.kryo5.minlog.Log;
-import com.example.databasetools.domain.ModelGenerator;
+import com.example.databasetools.generator.JavaModelGenerator;
+import com.example.databasetools.generator.ModelGenerator;
 import com.example.databasetools.ui.ModelGeneratorConfigurationDialog;
 import com.intellij.database.psi.DbTable;
 import com.intellij.ide.highlighter.JavaClassFileType;
@@ -52,10 +53,8 @@ public class ModelAction extends AnAction {
             if (element instanceof DbTable table) {
                 Log.debug(String.format("table: %s", table.getName()));
 
-                var modelGenerator = new ModelGenerator(configuration);
-                var model = modelGenerator.generate(table);
-
-                var javaFile = modelGenerator.generateModelJavaFile(model);
+                var model = new ModelGenerator(configuration).generate(table);
+                var javaFile = new JavaModelGenerator().generate(model);
                 Log.debug(javaFile);
 
                 var modelPsiFile = PsiFileFactory.getInstance(project)
